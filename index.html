@@ -22,23 +22,64 @@
         .container {
             background: white;
             border-radius: 20px;
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatXMY - Ultimate AI Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
             width: 100%;
-            max-width: 900px;
-            height: 600px;
+            max-width: 1200px;
+            height: 650px;
             display: flex;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         .sidebar {
-            width: 250px;
+            width: 280px;
             background: #f8f9fa;
             border-radius: 20px 0 0 20px;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
             overflow-y: auto;
         }
-        .sidebar h3 { color: #667eea; font-size: 16px; margin-bottom: 10px; }
+        .sidebar h3 { color: #667eea; font-size: 16px; margin-bottom: 5px; }
+        .mode-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .mode-btn {
+            padding: 10px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
         .history-item {
             padding: 12px;
             background: white;
@@ -46,18 +87,25 @@
             cursor: pointer;
             font-size: 13px;
             transition: all 0.3s;
-            border: 2px solid transparent;
+            position: relative;
         }
-        .history-item:hover { border-color: #667eea; transform: translateX(5px); }
+        .history-item:hover { transform: translateX(5px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .history-item.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
-        .clear-btn {
-            padding: 10px;
-            background: #ff4444;
+        .save-btn {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
             cursor: pointer;
-            margin-top: auto;
+        }
+        .saved-items {
+            max-height: 200px;
+            overflow-y: auto;
         }
         .chat-area { flex: 1; display: flex; flex-direction: column; }
         .header {
@@ -65,8 +113,16 @@
             color: white;
             padding: 20px;
             border-radius: 0 20px 0 0;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+        .stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+        }
+        .stat-item { text-align: center; }
         .messages {
             flex: 1;
             padding: 20px;
@@ -76,10 +132,11 @@
             gap: 15px;
         }
         .message {
-            max-width: 70%;
+            max-width: 75%;
             padding: 12px 18px;
             border-radius: 18px;
             word-wrap: break-word;
+            position: relative;
         }
         .message.user {
             align-self: flex-end;
@@ -87,35 +144,43 @@
             color: white;
         }
         .message.bot { align-self: flex-start; background: #f0f0f0; color: #333; }
-        .message img { max-width: 200px; border-radius: 10px; margin-bottom: 5px; }
-        .search-results {
-            background: #e8f4f8;
-            border-left: 4px solid #667eea;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
-            font-size: 13px;
-        }
-        .search-result-item {
-            margin: 8px 0;
-            padding: 8px;
-            background: white;
-            border-radius: 6px;
-        }
-        .search-result-title {
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 4px;
-        }
-        .search-result-url {
-            color: #666;
+        .message-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
             font-size: 11px;
+        }
+        .action-btn {
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn:hover { background: #667eea; color: white; }
+        .file-preview {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-size: 13px;
         }
         .input-area {
             padding: 20px;
             border-top: 1px solid #eee;
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
+        }
+        .tool-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
         }
         input[type="text"] {
             flex: 1;
@@ -125,118 +190,226 @@
             font-size: 15px;
             outline: none;
         }
-        input[type="text"]:focus { border-color: #667eea; }
         button {
             padding: 12px 20px;
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
             border-radius: 25px;
-            font-size: 15px;
             cursor: pointer;
             font-weight: 600;
         }
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
-        .typing { align-self: flex-start; padding: 12px 18px; background: #f0f0f0; border-radius: 18px; display: none; }
-        .typing.show { display: block; }
-        .premium-badge {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #000;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-        .upgrade-btn {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #000;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 25px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .code-block { position: relative; margin: 10px 0; border-radius: 8px; overflow: hidden; }
-        .code-header {
-            background: #2d2d2d;
-            color: #ccc;
+        .lang-selector {
             padding: 8px 15px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            font-family: monospace;
-        }
-        .copy-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 4px;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            font-size: 13px;
             cursor: pointer;
-            font-size: 11px;
+            background: white;
         }
-        pre[class*="language-"] { margin: 0 !important; border-radius: 0 0 8px 8px !important; }
         @media (max-width: 768px) { .sidebar { display: none; } }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="sidebar">
+            <h3>🎯 Rejimlar</h3>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="general">💬 Umumiy</button>
+                <button class="mode-btn" data-mode="math">🔢 Matematika</button>
+                <button class="mode-btn" data-mode="code">💻 Dasturlash</button>
+                <button class="mode-btn" data-mode="english">🇬🇧 Ingliz tili</button>
+            </div>
+            
             <h3>📝 Tarix</h3>
-            <div id="historyList"></div>
-            <button class="clear-btn" onclick="clearHistory()">🗑️ Tozalash</button>
+            <div id="historyList" style="max-height: 200px; overflow-y: auto;"></div>
+            
+            <h3>⭐ Saqlangan</h3>
+            <div id="savedList" class="saved-items"></div>
+            
+            <button onclick="clearAll()" style="background: #ff4444; margin-top: auto;">🗑️ Tozalash</button>
         </div>
+        
         <div class="chat-area">
             <div class="header">
-                <h1 id="chatTitle">🤖 ChatXMY</h1>
-                <p>AI Yordamchi + Internet Qidiruv</p>
+                <div>
+                    <h1 id="chatTitle">🤖 ChatXMY Ultimate</h1>
+                    <p style="font-size: 13px; opacity: 0.9;">AI + Internet + Fayl</p>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div style="font-size: 18px; font-weight: bold;" id="msgCount">0</div>
+                        <div>Xabarlar</div>
+                    </div>
+                    <div class="stat-item">
+                        <div style="font-size: 18px; font-weight: bold;" id="fileCount">0</div>
+                        <div>Fayllar</div>
+                    </div>
+                </div>
             </div>
+            
             <div class="messages" id="messages">
-                <div class="message bot">Salom! Men ChatXMY. Internet qidiruv bilan yordam bera olaman! 🌐</div>
+                <div class="message bot">
+                    Salom! Men ChatXMY Ultimate versiyasi. 
+                    <br>✅ Internet qidiruv
+                    <br>✅ Fayl yuklash (PDF, DOCX, TXT)
+                    <br>✅ Ko'p tillar
+                    <br>✅ Maxsus rejimlar
+                    <br><br>Qanday yordam bera olaman? 🌟
+                </div>
             </div>
+            
             <div class="input-area">
-                <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
-                <button onclick="document.getElementById('imageInput').click()" style="padding: 15px; border-radius: 50%; font-size: 20px;" title="Rasm">📷</button>
-                <button onclick="toggleSearchMode()" id="searchBtn" style="padding: 15px; border-radius: 50%; font-size: 20px; background: #4CAF50;" title="Internet qidiruv">🔍</button>
-                <button onclick="startVoiceInput()" id="voiceBtn" style="padding: 15px; border-radius: 50%; font-size: 20px; background: #764ba2;" title="Ovoz">🎤</button>
-                <input type="text" id="input" placeholder="Savolingizni yozing..." onkeypress="if(event.key==='Enter') sendMessage()">
-                <button onclick="sendMessage()">Yuborish</button>
+                <div class="tool-buttons">
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                    <input type="file" id="fileInput" accept=".pdf,.docx,.txt" style="display: none;" onchange="handleFileUpload(event)">
+                    <button onclick="document.getElementById('imageInput').click()" style="padding: 12px; border-radius: 50%; font-size: 18px;" title="Rasm">📷</button>
+                    <button onclick="document.getElementById('fileInput').click()" style="padding: 12px; border-radius: 50%; font-size: 18px;" title="Fayl">📁</button>
+                    <button onclick="toggleSearchMode()" id="searchBtn" style="padding: 12px; border-radius: 50%; font-size: 18px; background: #4CAF50;" title="Internet">🔍</button>
+                    <button onclick="startVoiceInput()" id="voiceBtn" style="padding: 12px; border-radius: 50%; font-size: 18px; background: #764ba2;" title="Ovoz">🎤</button>
+                    <select class="lang-selector" id="langSelector">
+                        <option value="uz">🇺🇿 O'zbek</option>
+                        <option value="ru">🇷🇺 Русский</option>
+                        <option value="en">🇬🇧 English</option>
+                        <option value="tr">🇹🇷 Türkçe</option>
+                    </select>
+                </div>
+                <div class="input-row">
+                    <input type="text" id="input" placeholder="Savolingizni yozing..." onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button onclick="sendMessage()">Yuborish</button>
+                </div>
             </div>
         </div>
     </div>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
-        if (!localStorage.getItem('chatxmy_logged_in')) {
-            window.location.href = 'login.html';
-        }
-        
         const TAVILY_API_KEY = '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';
         
         let history = [];
-        let currentImage = null;
         let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+        let savedMessages = JSON.parse(localStorage.getItem('savedMessages') || '[]');
         let currentChatId = null;
         let searchMode = false;
-        const DAILY_TIME_LIMIT = 4 * 60 * 60 * 1000;
-        let isPremium = localStorage.getItem('isPremium') === 'true';
-        let sessionStartTime = Date.now();
+        let currentMode = 'general';
+        let currentFile = null;
+        let stats = { messages: 0, files: 0 };
+        
+        // Mode configurations
+        const modes = {
+            general: { name: 'Umumiy', prompt: 'Sen ChatXMY. FAQAT O\'ZBEK tilida javob ber!' },
+            math: { name: 'Matematika', prompt: 'Sen matematika o\'qituvchisi. Qadamma-qadam tushuntir. FAQAT O\'ZBEK tilida!' },
+            code: { name: 'Dasturlash', prompt: 'Sen dasturlash mentori. Kod yoz va tushuntir. FAQAT O\'ZBEK tilida!' },
+            english: { name: 'Ingliz tili', prompt: 'Sen ingliz tili o\'qituvchisi. Grammatika va so\'zlarni o\'rgat. FAQAT O\'ZBEK tilida tushuntir!' }
+        };
+        
+        // Language prompts
+        const langPrompts = {
+            uz: 'FAQAT O\'ZBEK tilida javob ber!',
+            ru: 'Отвечай ТОЛЬКО на РУССКОМ языке!',
+            en: 'Answer ONLY in ENGLISH!',
+            tr: 'SADECE TÜRKÇE cevap ver!'
+        };
+        
+        // Mode selection
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentMode = this.dataset.mode;
+                addMessage(`🎯 ${modes[currentMode].name} rejimi yoqildi!`, 'bot');
+            });
+        });
         
         function toggleSearchMode() {
             searchMode = !searchMode;
             const btn = document.getElementById('searchBtn');
-            if (searchMode) {
-                btn.style.background = '#FF6B6B';
-                btn.title = 'Internet qidiruv: YONIQ';
-                addMessage('🔍 Internet qidiruv yoqildi! Savol bering...', 'bot');
-            } else {
-                btn.style.background = '#4CAF50';
-                btn.title = 'Internet qidiruv: O\'CHIQ';
-                addMessage('💬 Oddiy chat rejimi', 'bot');
+            btn.style.background = searchMode ? '#FF6B6B' : '#4CAF50';
+            addMessage(searchMode ? '🔍 Internet qidiruv yoqildi!' : '💬 Oddiy chat', 'bot');
+        }
+        
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            stats.files++;
+            updateStats();
+            
+            const fileType = file.name.split('.').pop().toLowerCase();
+            let fileContent = '';
+            
+            try {
+                if (fileType === 'txt') {
+                    fileContent = await file.text();
+                } else if (fileType === 'pdf') {
+                    fileContent = await extractPDFText(file);
+                } else if (fileType === 'docx') {
+                    fileContent = await extractDOCXText(file);
+                }
+                
+                currentFile = { name: file.name, content: fileContent };
+                const preview = document.createElement('div');
+                preview.className = 'message user';
+                preview.innerHTML = `<div class="file-preview">📁 ${file.name}<br><small>${fileContent.substring(0, 100)}...</small></div>`;
+                document.getElementById('messages').appendChild(preview);
+                addMessage(`Fayl yuklandi! Savol bering...`, 'bot');
+            } catch (error) {
+                addMessage(`❌ Fayl o'qishda xatolik: ${error.message}`, 'bot');
             }
+        }
+        
+        async function extractPDFText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let text = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                text += content.items.map(item => item.str).join(' ') + '\n';
+            }
+            return text;
+        }
+        
+        async function extractDOCXText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer });
+            return result.value;
+        }
+        
+        function saveMessage(text) {
+            const saved = { id: Date.now(), text, date: new Date().toLocaleString() };
+            savedMessages.push(saved);
+            localStorage.setItem('savedMessages', JSON.stringify(savedMessages));
+            loadSaved();
+            addMessage('💾 Saqlandi!', 'bot');
+        }
+        
+        function loadSaved() {
+            const list = document.getElementById('savedList');
+            list.innerHTML = savedMessages.map(msg => 
+                `<div class="history-item" onclick="showSaved(${msg.id})">
+                    ${msg.text.substring(0, 30)}...
+                    <br><small>${msg.date}</small>
+                </div>`
+            ).join('');
+        }
+        
+        function shareMessage(text) {
+            if (navigator.share) {
+                navigator.share({ text });
+            } else {
+                navigator.clipboard.writeText(text);
+                addMessage('📋 Nusxalandi!', 'bot');
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('msgCount').textContent = stats.messages;
+            document.getElementById('fileCount').textContent = stats.files;
         }
         
         async function searchInternet(query) {
@@ -246,145 +419,41 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         api_key: TAVILY_API_KEY,
-                        query: query,
+                        query,
                         search_depth: 'basic',
-                        max_results: 5
+                        max_results: 3
                     })
                 });
                 return await response.json();
             } catch (error) {
-                console.error('Qidiruv xatosi:', error);
                 return null;
-            }
-        }
-        
-        function displaySearchResults(results) {
-            if (!results || !results.results || results.results.length === 0) {
-                return '🔍 Natija topilmadi.';
-            }
-            let html = '<div class="search-results"><strong>🌐 Internet natijalar:</strong><br><br>';
-            results.results.slice(0, 3).forEach((result, index) => {
-                html += `<div class="search-result-item">`;
-                html += `<div class="search-result-title">${index + 1}. ${result.title}</div>`;
-                html += `<div>${result.content.substring(0, 150)}...</div>`;
-                html += `<div class="search-result-url">🔗 ${result.url}</div></div>`;
-            });
-            html += '</div>';
-            return html;
-        }
-        
-        function getUsageToday() {
-            const today = new Date().toDateString();
-            const usage = JSON.parse(localStorage.getItem('usage') || '{}');
-            if (usage.date !== today) {
-                usage.date = today;
-                usage.totalTime = 0;
-                localStorage.setItem('usage', JSON.stringify(usage));
-            }
-            return usage.totalTime || 0;
-        }
-        
-        function showPremiumModal() {
-            alert('🎉 Premium!\n\n✅ Cheksiz\n✅ Internet\n\n💰 $4.99/oy\n📞 +998 94 587 64 00\n💳 8600 0607 0665 2055');
-        }
-        
-        if (isPremium) {
-            document.getElementById('chatTitle').innerHTML += ' <span class="premium-badge">👑 Premium</span>';
-        }
-        
-        function loadHistory() {
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = '';
-            chatHistory.slice().reverse().forEach((chat) => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                if (chat.id === currentChatId) item.classList.add('active');
-                const preview = chat.messages[0]?.content?.substring(0, 30) || 'Yangi';
-                item.innerHTML = `<div style="font-weight: bold;">${preview}...</div>`;
-                item.onclick = () => loadChat(chat.id);
-                historyList.appendChild(item);
-            });
-        }
-        
-        function saveCurrentChat() {
-            if (history.length === 0) return;
-            if (!currentChatId) {
-                currentChatId = Date.now().toString();
-                chatHistory.push({ id: currentChatId, timestamp: Date.now(), messages: [] });
-            }
-            const chat = chatHistory.find(c => c.id === currentChatId);
-            if (chat) {
-                chat.messages = [...history];
-                localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-                loadHistory();
-            }
-        }
-        
-        function loadChat(chatId) {
-            const chat = chatHistory.find(c => c.id === chatId);
-            if (!chat) return;
-            currentChatId = chatId;
-            history = [...chat.messages];
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = '';
-            history.forEach(msg => addMessage(msg.content, msg.role === 'user' ? 'user' : 'bot', false));
-            loadHistory();
-        }
-        
-        function clearHistory() {
-            if (confirm('O\'chirish?')) {
-                chatHistory = [];
-                localStorage.removeItem('chatHistory');
-                loadHistory();
             }
         }
         
         function handleImageUpload(event) {
             const file = event.target.files[0];
-            if (!file) return;
-            if (file.size > 20 * 1024 * 1024) {
-                addMessage('❌ 20MB dan kichik!', 'bot');
-                return;
-            }
+            if (!file || file.size > 20 * 1024 * 1024) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                currentImage = e.target.result;
                 const preview = document.createElement('div');
                 preview.className = 'message user';
-                preview.innerHTML = `<img src="${e.target.result}"><br>📷 Yuklandi!`;
+                preview.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; border-radius: 10px;">`;
                 document.getElementById('messages').appendChild(preview);
-                document.getElementById('messages').scrollTop = 999999;
             };
             reader.readAsDataURL(file);
         }
         
         let recognition = null;
-        let synthesis = window.speechSynthesis;
-        
         function startVoiceInput() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                addMessage('❌ Ovoz qo\'llab-quvvatlanmaydi!', 'bot');
-                return;
-            }
+            if (!('webkitSpeechRecognition' in window)) return;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'uz-UZ';
-            const voiceBtn = document.getElementById('voiceBtn');
-            voiceBtn.textContent = '🔴';
-            recognition.onresult = function(event) {
-                document.getElementById('input').value = event.results[0][0].transcript;
-                voiceBtn.textContent = '🎤';
-                setTimeout(() => sendMessage(), 500);
+            recognition.onresult = (e) => {
+                document.getElementById('input').value = e.results[0][0].transcript;
+                setTimeout(sendMessage, 500);
             };
-            recognition.onerror = () => { voiceBtn.textContent = '🎤'; };
             recognition.start();
-        }
-        
-        function speakText(text) {
-            synthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'uz-UZ';
-            synthesis.speak(utterance);
         }
         
         async function sendMessage() {
@@ -392,99 +461,83 @@
             const message = input.value.trim();
             if (!message) return;
             
-            addMessage(message, 'user');
+            stats.messages++;
+            updateStats();
+            
+            addMessage(message, 'user', true);
             input.value = '';
-            const typing = document.createElement('div');
-            typing.className = 'typing show';
-            typing.textContent = searchMode ? '🔍 Qidiryapman...' : '...';
-            document.getElementById('messages').appendChild(typing);
+            
+            const lang = document.getElementById('langSelector').value;
+            let systemPrompt = modes[currentMode].prompt + ' ' + langPrompts[lang];
+            let userPrompt = message;
+            
+            if (currentFile) {
+                userPrompt = `Fayl: ${currentFile.name}\n\nMatn:\n${currentFile.content}\n\nSavol: ${message}`;
+                currentFile = null;
+            }
+            
+            if (searchMode) {
+                const results = await searchInternet(message);
+                if (results?.results) {
+                    let context = 'Internet:\n';
+                    results.results.forEach((r, i) => {
+                        context += `${i+1}. ${r.title}: ${r.content}\n`;
+                    });
+                    userPrompt = context + '\nSavol: ' + message;
+                }
+            }
             
             try {
-                let aiPrompt = message;
-                
-                if (searchMode) {
-                    const searchResults = await searchInternet(message);
-                    typing.remove();
-                    
-                    if (searchResults && searchResults.results) {
-                        const resultsHTML = displaySearchResults(searchResults);
-                        const resultsDiv = document.createElement('div');
-                        resultsDiv.className = 'message bot';
-                        resultsDiv.innerHTML = resultsHTML;
-                        document.getElementById('messages').appendChild(resultsDiv);
-                        
-                        let context = 'Internet:\n\n';
-                        searchResults.results.slice(0, 3).forEach((r, i) => {
-                            context += `${i+1}. ${r.title}\n${r.content}\n\n`;
-                        });
-                        aiPrompt = `${context}\n\nSavol: ${message}\n\nJavob:`;
-                    }
-                    
-                    typing.className = 'typing show';
-                    typing.textContent = '💬 Javob...';
-                    document.getElementById('messages').appendChild(typing);
-                }
-                
-                history.push({role: 'user', content: aiPrompt});
-                
                 const response = await fetch('/.netlify/functions/chat', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        model: currentImage ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile",
-                        messages: currentImage ? [
-                            {role: 'system', content: 'ChatXMY. FAQAT O\'ZBEK!'},
-                            {role: 'user', content: [
-                                {type: 'text', text: aiPrompt},
-                                {type: 'image_url', image_url: {url: currentImage}}
-                            ]}
-                        ] : [{role: 'system', content: 'ChatXMY. FAQAT O\'ZBEK!'}, ...history]
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            {role: 'system', content: systemPrompt},
+                            {role: 'user', content: userPrompt}
+                        ]
                     })
                 });
-                
                 const data = await response.json();
-                typing.remove();
-                if (currentImage) currentImage = null;
-                
                 if (data.answer) {
-                    history.push({role: 'assistant', content: data.answer});
-                    addMessage(data.answer, 'bot');
-                    speakText(data.answer);
-                    saveCurrentChat();
+                    addMessage(data.answer, 'bot', true);
                 }
             } catch (error) {
-                typing.remove();
                 addMessage('Xatolik: ' + error.message, 'bot');
             }
         }
         
-        function addMessage(text, type) {
+        function addMessage(text, type, withActions = false) {
             const div = document.createElement('div');
             div.className = 'message ' + type;
-            const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-            if (codeBlockRegex.test(text)) {
-                let html = text;
-                html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-                    const language = lang || 'javascript';
-                    const codeId = 'code-' + Date.now();
-                    return `<div class="code-block"><div class="code-header"><span>${language}</span><button class="copy-btn" onclick="copyCode('${codeId}')">📋</button></div><pre><code id="${codeId}" class="language-${language}">${code.trim()}</code></pre></div>`;
-                });
-                div.innerHTML = html;
-                setTimeout(() => {
-                    div.querySelectorAll('code').forEach(block => Prism.highlightElement(block));
-                }, 10);
-            } else {
-                div.innerHTML = text;
-            }
+            div.innerHTML = text;
+            
+            if (withActions && type === 'bot') {
+                const actions = document.createElement('div');
+                actions.className = 'message-actions';
+                actions.innerHTML = `
+                    <button class="action-btn" onclick="saveMessage('${text.replace(/'/g, "\\'")}')">💾 Saqlash</button>
+                    <button class="action-btn" onclick="shareMessage('${text.replace(/'/g, "\\'")}')">🔗 Ulashish</button>
+                `;
+                div.appendChild(actions);
+                      }
+            
             document.getElementById('messages').appendChild(div);
             document.getElementById('messages').scrollTop = 999999;
         }
         
-        function copyCode(codeId) {
-            navigator.clipboard.writeText(document.getElementById(codeId).textContent);
+        function clearAll() {
+            if (confirm('Hammasini o\'chirish?')) {
+                chatHistory = [];
+                savedMessages = [];
+                localStorage.clear();
+                location.reload();
+            }
         }
         
-        loadHistory();
+        loadSaved();
+        updateStats();
     </script>
 </body>
 </html>
